@@ -19,7 +19,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.eclipse.core.runtime.adaptor.EclipseStarter;
-import org.eclipse.osgi.framework.internal.core.FrameworkProperties;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -295,9 +294,6 @@ public class DefaultEclipseInstance
                 properties.put( "osgi.parentClassloader", "fwk" );
 
                 System.setProperty( "osgi.framework.useSystemProperties", "false" );
-
-                // this is a hack to force reset of properties from an eventual previous run
-                FrameworkProperties.setProperties( (Map) System.getProperties() );
 
                 EclipseStarter.setInitialProperties( properties );
                 EclipseStarter.startup( new String[0], null );
