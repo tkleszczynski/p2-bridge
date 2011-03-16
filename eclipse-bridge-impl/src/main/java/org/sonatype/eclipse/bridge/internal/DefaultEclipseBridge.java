@@ -71,7 +71,7 @@ public class DefaultEclipseBridge
             final JclObjectFactory factory = JclObjectFactory.getInstance();
             final Object instance =
                 factory.create( jcl, "org.sonatype.eclipse.bridge.internal.instance.DefaultEclipseInstance",
-                    new Object[] { location, equinoxURL }, new Class[] { EclipseLocation.class, URL.class } );
+                    new Object[] { location }, new Class[] { EclipseLocation.class } );
 
             return EclipseInstance.class.cast( instance );
         }
