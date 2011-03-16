@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -36,12 +35,9 @@ public class DefaultEclipseInstance
 
     private final Lock eclipseLock;
 
-    private final URL frameworkJarURL;
-
-    public DefaultEclipseInstance( final EclipseLocation location, final URL frameworkJarURL )
+    public DefaultEclipseInstance( final EclipseLocation location )
     {
         this.location = location;
-        this.frameworkJarURL = frameworkJarURL;
 
         state = new Stopped();
         eclipseLock = new ReentrantLock( true );
@@ -294,7 +290,6 @@ public class DefaultEclipseInstance
                 {
                     properties.putAll( launchProperties );
                 }
-                properties.put( EclipseStarter.PROP_FRAMEWORK, frameworkJarURL.toExternalForm() );
                 properties.put( EclipseStarter.PROP_INSTALL_AREA, eclipseLocation );
                 properties.put( EclipseStarter.PROP_SYSPATH, eclipseLocation + "/plugins" );
                 properties.put( "osgi.parentClassloader", "fwk" );

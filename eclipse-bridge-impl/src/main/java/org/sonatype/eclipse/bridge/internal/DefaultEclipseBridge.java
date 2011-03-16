@@ -9,7 +9,9 @@ package org.sonatype.eclipse.bridge.internal;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.io.InputStream;
 import java.net.URL;
+import java.net.URLClassLoader;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.sonatype.eclipse.bridge.EclipseBridge;
@@ -17,6 +19,7 @@ import org.sonatype.eclipse.bridge.EclipseInstance;
 import org.sonatype.eclipse.bridge.EclipseLocation;
 import org.xeustechnologies.jcl.JarClassLoader;
 import org.xeustechnologies.jcl.JclObjectFactory;
+import org.xeustechnologies.jcl.ProxyClassLoader;
 
 @Component( role = EclipseBridge.class )
 public class DefaultEclipseBridge
@@ -59,29 +62,54 @@ public class DefaultEclipseBridge
         }
         try
         {
-            // final URLClassLoader eclipseClassLoader =
-            // new URLClassLoader( new URL[] { plugins[0].toURI().toURL(), instanceJar }, thisClassLoader );
-            // final Class<?> clazz =
-            // eclipseClassLoader.loadClass( "org.sonatype.eclipse.bridge.internal.instance.DefaultEclipseInstance" );
-            // final Constructor<?> constructor = clazz.getConstructor( EclipseInstance.class );
-            // final Object instance = constructor.newInstance( location );
-            // return EclipseInstance.class.cast( instance );
-
             final URL equinoxURL = plugins[0].toURI().toURL();
 
             final JarClassLoader jcl = new JarClassLoader();
             jcl.add( instanceJar.openStream() );
-            jcl.add( equinoxURL );
+            jcl.addLoader( new EclipseClassLoader( equinoxURL ) );
 
             final JclObjectFactory factory = JclObjectFactory.getInstance();
             final Object instance =
                 factory.create( jcl, "org.sonatype.eclipse.bridge.internal.instance.DefaultEclipseInstance",
                     new Object[] { location, equinoxURL }, new Class[] { EclipseLocation.class, URL.class } );
+
             return EclipseInstance.class.cast( instance );
         }
         catch ( final Exception e )
         {
             throw new RuntimeException( e );
         }
+    }
+
+    private class EclipseClassLoader
+        extends ProxyClassLoader
+    {
+
+        private final URLClassLoader urlClassLoader;
+
+        EclipseClassLoader( final URL equinoxJar )
+        {
+            urlClassLoader = new URLClassLoader( new URL[] { equinoxJar }, EclipseClassLoader.class.getClassLoader() );
+        }
+
+        @Override
+        public Class<?> loadClass( final String className, final boolean resolveIt )
+        {
+            try
+            {
+                return urlClassLoader.loadClass( className );
+            }
+            catch ( final ClassNotFoundException e )
+            {
+                return null;
+            }
+        }
+
+        @Override
+        public InputStream loadResource( final String name )
+        {
+            return urlClassLoader.getResourceAsStream( name );
+        }
+
     }
 }
