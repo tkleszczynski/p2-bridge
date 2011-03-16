@@ -16,8 +16,19 @@
         <version>1.0.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>eclipse-bridge</artifactId>
+    <artifactId>eclipse-bridge-instance</artifactId>
 
-    <name>P2 Bridge :: Eclipse Bridge</name>
+    <name>P2 Bridge :: Eclipse Bridge Instance</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.sonatype.p2.bridge</groupId>
+            <artifactId>eclipse-bridge</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse</groupId>
+            <artifactId>org.eclipse.osgi</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>

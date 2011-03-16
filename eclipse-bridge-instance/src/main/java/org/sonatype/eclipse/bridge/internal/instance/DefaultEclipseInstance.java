@@ -5,12 +5,13 @@
  * which accompanies this distribution, and is available at
  * http://www.eclipse.org/legal/epl-v10.html
  */
-package org.sonatype.eclipse.bridge.internal;
+package org.sonatype.eclipse.bridge.internal.instance;
 
 import java.io.InputStream;
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.Lock;
@@ -26,7 +27,7 @@ import org.osgi.framework.ServiceReference;
 import org.sonatype.eclipse.bridge.EclipseInstance;
 import org.sonatype.eclipse.bridge.EclipseLocation;
 
-class DefaultEclipseInstance
+public class DefaultEclipseInstance
     implements EclipseInstance
 {
     private EclipseInstance state;
@@ -35,9 +36,12 @@ class DefaultEclipseInstance
 
     private final Lock eclipseLock;
 
-    public DefaultEclipseInstance( final EclipseLocation location )
+    private final URL frameworkJarURL;
+
+    public DefaultEclipseInstance( final EclipseLocation location, final URL frameworkJarURL )
     {
         this.location = location;
+        this.frameworkJarURL = frameworkJarURL;
 
         state = new Stopped();
         eclipseLock = new ReentrantLock( true );
@@ -107,12 +111,14 @@ class DefaultEclipseInstance
                 final ServiceReference serviceReference = bundleContext.getServiceReference( serviceType.getName() );
                 if ( serviceReference == null )
                 {
-                    throw new IllegalStateException( String.format( "There is no service available of type %s", serviceType ) );
+                    throw new IllegalStateException( String.format( "There is no service available of type %s",
+                        serviceType ) );
                 }
                 final T service = serviceType.cast( bundleContext.getService( serviceReference ) );
                 if ( service == null )
                 {
-                    throw new IllegalStateException( String.format( "There is no service available of type %s", serviceType ) );
+                    throw new IllegalStateException( String.format( "There is no service available of type %s",
+                        serviceType ) );
                 }
                 activeServices.put( new WeakReference<T>( service, staleReferences ), serviceReference );
                 return service;
@@ -288,8 +294,9 @@ class DefaultEclipseInstance
                 {
                     properties.putAll( launchProperties );
                 }
-                properties.put( "osgi.install.area", eclipseLocation );
-                properties.put( "osgi.syspath", eclipseLocation + "/plugins" );
+                properties.put( EclipseStarter.PROP_FRAMEWORK, frameworkJarURL.toExternalForm() );
+                properties.put( EclipseStarter.PROP_INSTALL_AREA, eclipseLocation );
+                properties.put( EclipseStarter.PROP_SYSPATH, eclipseLocation + "/plugins" );
                 properties.put( "osgi.parentClassloader", "fwk" );
 
                 System.setProperty( "osgi.framework.useSystemProperties", "false" );

@@ -79,6 +79,13 @@ public class P2ProfileRegistryService
             {
                 final IProfile profile = profileRegistry.getProfile( profileId, timestamp );
                 final String tag = profile == null ? null : profile.getProperty( IProfile.PROP_TAG );
+                // final Map<String, String> tags =
+                // profileRegistry.getProfileStateProperties( profile.getProfileId(), IProfile.STATE_PROP_TAG );
+                // String tag = null;
+                // if ( profile != null )
+                // {
+                // tag = tags.get( String.valueOf( timestamp ) );
+                // }
 
                 final IQueryResult<IInstallableUnit> roots = profile.query( new UserVisibleRootQuery(), null );
                 final Set<IInstallableUnit> sorted = new TreeSet<IInstallableUnit>( roots.toUnmodifiableSet() );

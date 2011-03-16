@@ -3,6 +3,6 @@
 
 <target name="P2 local build">
 <locations>
-<location path="/Users/adreghiciu/work/p2TargetPlatform/eclipse" type="Profile"/>
+<location path="/Users/adreghiciu/work/p2install/eclipse" type="Profile"/>
 </locations>
 </target>
