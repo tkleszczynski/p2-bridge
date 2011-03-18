@@ -9,9 +9,7 @@ package org.sonatype.eclipse.bridge.internal;
 
 import java.io.File;
 import java.io.FilenameFilter;
-import java.io.InputStream;
 import java.net.URL;
-import java.net.URLClassLoader;
 
 import org.codehaus.plexus.component.annotations.Component;
 import org.sonatype.eclipse.bridge.EclipseBridge;
@@ -19,7 +17,6 @@ import org.sonatype.eclipse.bridge.EclipseInstance;
 import org.sonatype.eclipse.bridge.EclipseLocation;
 import org.xeustechnologies.jcl.JarClassLoader;
 import org.xeustechnologies.jcl.JclObjectFactory;
-import org.xeustechnologies.jcl.ProxyClassLoader;
 
 @Component( role = EclipseBridge.class )
 public class DefaultEclipseBridge
@@ -66,7 +63,7 @@ public class DefaultEclipseBridge
 
             final JarClassLoader jcl = new JarClassLoader();
             jcl.add( instanceJar.openStream() );
-            jcl.addLoader( new EclipseClassLoader( equinoxURL ) );
+            jcl.add( equinoxURL );
 
             final JclObjectFactory factory = JclObjectFactory.getInstance();
             final Object instance =
@@ -81,35 +78,4 @@ public class DefaultEclipseBridge
         }
     }
 
-    private class EclipseClassLoader
-        extends ProxyClassLoader
-    {
-
-        private final URLClassLoader urlClassLoader;
-
-        EclipseClassLoader( final URL equinoxJar )
-        {
-            urlClassLoader = new URLClassLoader( new URL[] { equinoxJar }, EclipseClassLoader.class.getClassLoader() );
-        }
-
-        @Override
-        public Class<?> loadClass( final String className, final boolean resolveIt )
-        {
-            try
-            {
-                return urlClassLoader.loadClass( className );
-            }
-            catch ( final ClassNotFoundException e )
-            {
-                return null;
-            }
-        }
-
-        @Override
-        public InputStream loadResource( final String name )
-        {
-            return urlClassLoader.getResourceAsStream( name );
-        }
-
-    }
 }

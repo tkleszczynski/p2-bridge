@@ -31,7 +31,7 @@
         <module>eclipse-bridge</module>
         <module>eclipse-bridge-instance</module>
         <module>eclipse-bridge-impl</module>
-        
+
         <module>p2-runtime-3.7-sonatype-fork</module>
 
         <module>p2-bridge-tycho-config</module>
@@ -197,6 +197,12 @@
                 <groupId>javax.inject</groupId>
                 <artifactId>javax.inject</artifactId>
                 <version>1</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.xeustechnologies</groupId>
+                <artifactId>jcl-core</artifactId>
+                <version>2.3-SNAPSHOT</version>
             </dependency>
 
         </dependencies>
