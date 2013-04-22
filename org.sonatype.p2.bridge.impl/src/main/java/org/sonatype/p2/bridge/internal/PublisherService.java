@@ -23,6 +23,7 @@ import org.eclipse.equinox.p2.metadata.IProvidedCapability;
 import org.eclipse.equinox.p2.metadata.IRequirement;
 import org.eclipse.equinox.p2.metadata.ITouchpointData;
 import org.eclipse.equinox.p2.metadata.ITouchpointInstruction;
+import org.eclipse.equinox.p2.metadata.IUpdateDescriptor;
 import org.eclipse.equinox.p2.metadata.expression.ExpressionUtil;
 import org.eclipse.equinox.p2.metadata.expression.IExpression;
 import org.eclipse.equinox.p2.metadata.expression.IExpressionFactory;
@@ -38,6 +39,7 @@ import org.sonatype.p2.bridge.model.InstallableUnit;
 import org.sonatype.p2.bridge.model.InstallableUnitProperty;
 import org.sonatype.p2.bridge.model.ProvidedCapability;
 import org.sonatype.p2.bridge.model.RequiredCapability;
+import org.sonatype.p2.bridge.model.UpdateDescriptor;
 import org.sonatype.p2.bridge.model.TouchpointData;
 import org.sonatype.p2.bridge.model.TouchpointInstruction;
 
@@ -49,12 +51,11 @@ public class PublisherService
     public void generateUpdateSite( final File location, final URI repositoryLocation )
     {
         IProvisioningAgent agent = null;
-        final File agentDir = Utils.temporaryAgentLocation();
         try
         {
             getLock().readLock().lock();
 
-            agent = createProvisioningAgent( agentDir.toURI() );
+            agent = createProvisioningAgent();
 
             final PublisherInfo info = new PublisherInfo();
             info.setArtifactRepository( org.eclipse.equinox.p2.publisher.Publisher.createArtifactRepository(
@@ -78,7 +79,6 @@ public class PublisherService
             {
                 agent.stop();
             }
-            Utils.deleteIfPossible( agentDir );
             getLock().readLock().unlock();
         }
     }
@@ -90,32 +90,31 @@ public class PublisherService
         final BundlesAction bundlesAction = new BundlesAction( bundles );
 
         final PublisherInfo request = new PublisherInfo();
+        request.setArtifactOptions(10);
         final PublisherResult result = new PublisherResult();
         final NullProgressMonitor monitor = new NullProgressMonitor();
 
         bundlesAction.perform( request, result, monitor );
 
         return translate( generateCapabilities, generateRequirements, generateManifest, true,
-                          result.query( QueryUtil.createIUAnyQuery(), monitor ).toSet() );
-    }
+            result.query( QueryUtil.createIUAnyQuery(), monitor ).toSet() );
+        }
 
-    public Collection<InstallableUnit> generateFeatureIUs( final boolean generateCapabilities,
-                                                           final boolean generateRequirements,
-                                                           final File... features )
-    {
-        final FeaturesAction action = new FeaturesAction( features );
+    public Collection<InstallableUnit> generateFeatureIUs( final boolean generateCapabilities, final boolean generateRequirements,
+                                                           final File... features) {
+        final FeaturesAction action = new FeaturesAction(features);
         final PublisherInfo request = new PublisherInfo();
+        request.setArtifactOptions(11);
         final PublisherResult result = new PublisherResult();
         final NullProgressMonitor monitor = new NullProgressMonitor();
-        action.perform( request, result, monitor );
-        return translate( generateCapabilities, generateRequirements, false, true,
-                          result.query( QueryUtil.createIUAnyQuery(), monitor ).toSet() );
+        action.perform(request, result, monitor);
+        return translate(generateCapabilities, generateRequirements, false, true,
+                result.query(QueryUtil.createIUAnyQuery(), monitor).toSet());
     }
-
+    
     private Collection<InstallableUnit> translate( final boolean generateCapabilities,
                                                    final boolean generateRequirements, final boolean generateManifest,
-                                                   final boolean generateProperties,
-                                                   final Collection<IInstallableUnit> units )
+                                                   final boolean generateProperties, final Collection<IInstallableUnit> units )
     {
         final ArrayList<InstallableUnit> results = new ArrayList<InstallableUnit>();
         for ( final IInstallableUnit unit : units )
@@ -126,19 +125,38 @@ public class PublisherService
             result.setVersion( unit.getVersion().toString() );
             result.setSingleton( unit.isSingleton() );
 
+            IUpdateDescriptor updateDescriptor = unit.getUpdateDescriptor();
+            if ( updateDescriptor != null) 
+            {
+            	IMatchExpression<IInstallableUnit> updateItem = updateDescriptor.getIUsBeingUpdated().iterator().next();
+            	if (updateItem != null)
+            	{
+            		UpdateDescriptor d = new UpdateDescriptor();
+            		d.setId(updateItem.getParameters()[0].toString());
+            		d.setSeverity(String.valueOf(updateDescriptor.getSeverity()));
+            		d.setRange("[" + updateItem.getParameters()[2] + "," + updateItem.getParameters()[3] + ")");
+            		result.setUpdateDescriptor(d);
+            	}
+            }
+            
+            if ( unit.getFilter() != null ) 
+            {
+           		result.setFilter(unit.getFilter().getParameters()[0].toString());
+            }
+            
             if ( generateProperties )
             {
-                appendProperties( unit.getProperties(), result );
+                appendProperties( unit.getProperties(), result);
             }
-
+            
             if ( generateCapabilities )
             {
-                appendCapabilities( unit.getProvidedCapabilities(), result );
+                appendCapabilities( unit.getProvidedCapabilities(), result);
             }
 
             if ( generateRequirements )
             {
-                appendRequirements( unit.getRequirements(), result );
+                appendRequirements( unit.getRequirements(), result);
             }
 
             if ( generateManifest )
@@ -155,13 +173,14 @@ public class PublisherService
 
     /**
      * Appends the passed properties.
-     *
-     * @param properties The properties
-     * @param result     The result unit where to append them
+     * 
+     * @param properties
+     *            The properties
+     * @param result
+     *            The result unit where to append them
      */
-    private void appendProperties( Map<String, String> properties, InstallableUnit result )
-    {
-        for ( Entry<String, String> e : properties.entrySet() )
+    private void appendProperties(Map<String, String> properties, InstallableUnit result) {
+        for ( Entry<String, String> e : properties.entrySet())
         {
             final InstallableUnitProperty prop = new InstallableUnitProperty();
             prop.setName( e.getKey() );
@@ -169,15 +188,13 @@ public class PublisherService
             result.addProperty( prop );
         }
     }
-
+    
     /**
      * Appends the passed requirements to the unit.
-     *
      * @param requirements The requirements or null
-     * @param result       The result unit where to append them
+     * @param result The result unit where to append them
      */
-    private void appendRequirements( final Collection<IRequirement> requirements, final InstallableUnit result )
-    {
+    private void appendRequirements(final Collection<IRequirement> requirements, final InstallableUnit result) {
         if ( requirements == null )
         {
             return;
@@ -212,12 +229,10 @@ public class PublisherService
 
     /**
      * Appends the passed capabilities to the unit.
-     *
      * @param capabilities The capabilities or null
-     * @param result       The result unit where to append them
+     * @param result The result unit where to append them
      */
-    private void appendCapabilities( final Collection<IProvidedCapability> capabilities, final InstallableUnit result )
-    {
+    private void appendCapabilities(final Collection<IProvidedCapability> capabilities, final InstallableUnit result) {
         if ( capabilities == null )
         {
             return;
