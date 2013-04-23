@@ -799,7 +799,11 @@ public class ArtifactRepositoryService
     private void addArtifactProperties( final InstallableArtifact artifact, final ArtifactDescriptor descriptor )
     {
         descriptor.setProperty( REPOSITORY_PATH_PROPERTY, artifact.getRepositoryPath() );
-
+        if ("org.eclipse.update.feature".equals(artifact.getClassifier()))
+        {
+        	descriptor.setProperty(IArtifactDescriptor.DOWNLOAD_CONTENTTYPE, IArtifactDescriptor.TYPE_ZIP);
+        }
+        
         final List<InstallableArtifactProperty> properties = artifact.getProperties();
         if ( properties == null )
         {

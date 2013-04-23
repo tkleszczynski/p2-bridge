@@ -237,9 +237,67 @@
                     <required>false</required>
                 </field>
 
+                <field xml.tagName="licenses">
+                    <name>licenses</name>
+                    <version>1.0.0+</version>
+                    <association xml.tagName="license">
+                        <type>License</type>
+                        <multiplicity>*</multiplicity>
+                    </association>
+                    <required>false</required>
+                </field>
+                
+                <field xml.tagName="copyright">
+                    <name>copyright</name>
+                    <version>1.0.0+</version>
+                    <association>
+                        <type>Copyright</type>
+                    </association>
+                    <required>false</required>
+                </field>
             </fields>
         </class>
         
+        <class>
+            <name>Copyright</name>
+            <version>1.0.0+</version>
+            <fields>
+                <field xml.attribute="true">
+                    <name>url</name>
+                    <version>1.0.0+</version>
+                    <type>String</type>
+                    <required>true</required>
+                </field>
+                
+                <field>
+                    <name>body</name>
+                    <version>1.0.0+</version>
+                    <type>Content</type>
+                    <required>true</required>
+                </field>
+            </fields>
+        </class>
+        
+        <class>
+            <name>License</name>
+            <version>1.0.0+</version>
+            <fields>
+                <field xml.attribute="true">
+                    <name>url</name>
+                    <version>1.0.0+</version>
+                    <type>String</type>
+                    <required>true</required>
+                </field>
+                
+                <field>
+                    <name>body</name>
+                    <version>1.0.0+</version>
+                    <type>Content</type>
+                    <required>true</required>
+                </field>
+            </fields>
+        </class>
+
         <class>
             <name>InstallableUnitProperty</name>
             <version>1.0.0+</version>

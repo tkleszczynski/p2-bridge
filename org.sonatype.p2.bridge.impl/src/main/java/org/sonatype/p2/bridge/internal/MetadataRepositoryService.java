@@ -23,7 +23,9 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.equinox.internal.p2.metadata.ArtifactKey;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.core.ProvisionException;
+import org.eclipse.equinox.p2.metadata.ICopyright;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.metadata.ILicense;
 import org.eclipse.equinox.p2.metadata.IProvidedCapability;
 import org.eclipse.equinox.p2.metadata.IRequirement;
 import org.eclipse.equinox.p2.metadata.IRequirementChange;
@@ -49,9 +51,11 @@ import org.eclipse.equinox.p2.repository.metadata.IMetadataRepository;
 import org.eclipse.equinox.p2.repository.metadata.IMetadataRepositoryManager;
 import org.sonatype.p2.bridge.IUIdentity;
 import org.sonatype.p2.bridge.MetadataRepository;
+import org.sonatype.p2.bridge.model.Copyright;
 import org.sonatype.p2.bridge.model.InstallableUnit;
 import org.sonatype.p2.bridge.model.InstallableUnitArtifact;
 import org.sonatype.p2.bridge.model.InstallableUnitProperty;
+import org.sonatype.p2.bridge.model.License;
 import org.sonatype.p2.bridge.model.PatchChange;
 import org.sonatype.p2.bridge.model.PatchScope;
 import org.sonatype.p2.bridge.model.ProvidedCapability;
@@ -496,6 +500,8 @@ public class MetadataRepositoryService
             addProvidedCapabilities( unit, description );
             addRequirements( unit, description );
             addMetaRequirements( unit, description );
+            addCopyright( unit, description );
+            addLicense( unit, description );
             if ( description instanceof InstallableUnitFragmentDescription )
             {
                 addHostRequirements( unit, (InstallableUnitFragmentDescription) description );
@@ -762,6 +768,33 @@ public class MetadataRepositoryService
                                                     null );
 
         description.setUpdateDescriptor( updateDescriptor );
+    }
+    
+    private void addCopyright( final InstallableUnit unit, final InstallableUnitDescription description )
+    {
+        final Copyright unitCopyright = unit.getCopyright();
+        if ( unitCopyright == null )
+        {
+            return;
+        }
+        ICopyright copyright = MetadataFactory.createCopyright(URI.create(unitCopyright.getUrl()), unitCopyright.getBody());
+        description.setCopyright(copyright);
+    }
+    
+    private void addLicense( final InstallableUnit unit, final InstallableUnitDescription description )
+    {
+        final List<License> unitLicenses = unit.getLicenses();
+        if ( unitLicenses == null || unitLicenses.isEmpty() )
+        {
+            return;
+        }
+        List<ILicense> licenses = new ArrayList<ILicense>();
+        for ( final License unitLicense : unitLicenses )
+        {
+            ILicense license = MetadataFactory.createLicense(URI.create(unitLicense.getUrl()), unitLicense.getBody());
+            licenses.add(license);
+        }
+        description.setLicenses(licenses.toArray(new ILicense[0]));
     }
 
 }

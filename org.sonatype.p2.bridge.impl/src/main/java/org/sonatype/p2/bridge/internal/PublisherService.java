@@ -19,6 +19,7 @@ import org.eclipse.equinox.internal.p2.updatesite.LocalUpdateSiteAction;
 import org.eclipse.equinox.p2.core.IProvisioningAgent;
 import org.eclipse.equinox.p2.core.ProvisionException;
 import org.eclipse.equinox.p2.metadata.IInstallableUnit;
+import org.eclipse.equinox.p2.metadata.ILicense;
 import org.eclipse.equinox.p2.metadata.IProvidedCapability;
 import org.eclipse.equinox.p2.metadata.IRequirement;
 import org.eclipse.equinox.p2.metadata.ITouchpointData;
@@ -35,8 +36,10 @@ import org.eclipse.equinox.p2.publisher.eclipse.BundlesAction;
 import org.eclipse.equinox.p2.publisher.eclipse.FeaturesAction;
 import org.eclipse.equinox.p2.query.QueryUtil;
 import org.sonatype.p2.bridge.Publisher;
+import org.sonatype.p2.bridge.model.Copyright;
 import org.sonatype.p2.bridge.model.InstallableUnit;
 import org.sonatype.p2.bridge.model.InstallableUnitProperty;
+import org.sonatype.p2.bridge.model.License;
 import org.sonatype.p2.bridge.model.ProvidedCapability;
 import org.sonatype.p2.bridge.model.RequiredCapability;
 import org.sonatype.p2.bridge.model.UpdateDescriptor;
@@ -145,6 +148,24 @@ public class PublisherService
             if ( unit.getFilter() != null ) 
             {
            		result.setFilter(unit.getFilter().getParameters()[0].toString());
+            }
+            
+            if ( unit.getCopyright() != null )
+            {
+            	Copyright copyright = new Copyright();
+            	copyright.setUrl( unit.getCopyright().getLocation().toString() );
+            	copyright.setBody( unit.getCopyright().getBody() );
+            	result.setCopyright( copyright );
+            }
+
+            if ( unit.getLicenses() != null )
+            {
+            	for ( ILicense lic : unit.getLicenses() ) {
+            		License license = new License();
+            		license.setUrl( lic.getLocation().toString() );
+            		license.setBody( lic.getBody() );
+            		result.addLicense( license );
+            	}
             }
 
             if ( generateProperties )
